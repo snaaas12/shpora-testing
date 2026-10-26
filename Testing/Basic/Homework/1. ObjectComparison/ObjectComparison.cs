@@ -1,5 +1,8 @@
-﻿using NUnit.Framework;
+﻿using FluentAssertions;
+using FluentAssertions.Equivalency;
+using NUnit.Framework;
 using NUnit.Framework.Legacy;
+using Xunit;
 
 namespace HomeExercise.Tasks.ObjectComparison;
 public class ObjectComparison
@@ -27,15 +30,41 @@ public class ObjectComparison
     }
 
     [Test]
+    public void CheckCurrentTsarRefactoring()
+    {
+        var actualTsar = TsarRegistry.GetCurrentTsar();
+
+        var expectedTsar = new Person("Ivan IV The Terrible", 54, 170, 70,
+            new Person("Vasili III of Russia", 28, 10, 60,
+            new Person("Vasili III of Russia", 28, 170, 60, null)));
+
+        actualTsar.Should().BeEquivalentTo(expectedTsar, options => options
+                  .Excluding(tsar => tsar.Path.EndsWith("Id")));
+
+    }
+
+    [Test]
     [Description("Альтернативное решение. Какие у него недостатки?")]
     public void CheckCurrentTsar_WithCustomEquality()
     {
         var actualTsar = TsarRegistry.GetCurrentTsar();
         var expectedTsar = new Person("Ivan IV The Terrible", 54, 170, 70,
-            new Person("Vasili III of Russia", 28, 170, 60, null));
+            new Person("Vasili III of Russia", 28, 10, 60,
+            new Person("Vasili III of Russia", 28, 170, 60, null)));
 
         // Какие недостатки у такого подхода? 
         ClassicAssert.True(AreEqual(actualTsar, expectedTsar));
+
+        //Трудности у такого подхода возникаеют в случаии,
+        //если нам нужно отследить, на каком именно значении валится тест. 
+        //FluentAssertion пишет на каком параметре валится тест
+        //То здесь мы просто увидим что тест не прошел
+
+        //Так же можно подметить что метод не очень "гибки"
+        //и в случае изменение класса Person придется и изменять метод AreEqual
+
+        //С использованием FluentAssertion повышается читаемость кода.
+        //В отлчии от самописного метода сравнения
     }
 
     private bool AreEqual(Person? actual, Person? expected)

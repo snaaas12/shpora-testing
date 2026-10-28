@@ -5,17 +5,35 @@ namespace HomeExercise.Tasks.NumberValidator;
 [TestFixture]
 public class NumberValidatorTests
 {
-    [TestCase(-1, 2, true, Description = "Отрицательная длина целой части")]
-    [TestCase(-1, 2, false, Description = "Отрицательная длина целой части без знака")]
-    public void Constructor_WithInvalidIntegerLength_ShouldThrowArgumentException(
+
+    [TestCase(0, 2, true, Description = "Precision равен нулю")]
+    [TestCase(-5, 2, true, Description = "Precision отрицательный")]
+    public void Constructor_WithInvalidPrecision_ShouldThrowArgumentException(
         int precision, int scale, bool onlyPositive)
     {
-        Assert.Throws<ArgumentException>(() =>
+        var exception = Assert.Throws<ArgumentException>(() =>
             new NumberValidator(precision, scale, onlyPositive));
+
+        Assert.That(exception.Message, Does.Contain("precision must be a positive number"));
     }
 
-    [TestCase(1, 0, true, Description = "Валидные параметры со знаком")]
-    [TestCase(17, 2, true, Description = "Большие значения параметров")]
+
+    [TestCase(5, -1, true, Description = "Scale отрицательный")]
+    [TestCase(2, 2, true, Description = "Scale равен Precision")]
+    [TestCase(2, 5, true, Description = "Scale больше Precision")]
+    public void Constructor_WithInvalidScale_ShouldThrowArgumentException(
+        int precision, int scale, bool onlyPositive)
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            new NumberValidator(precision, scale, onlyPositive));
+
+        Assert.That(exception.Message, Does.Contain("scale must be a non-negative number"));
+    }
+
+
+    [TestCase(1, 0, true, Description = "Минимальные валидные параметры")]
+    [TestCase(17, 2, true, Description = "Большие валидные параметры")]
+    [TestCase(5, 4, true, Description = "Scale меньше Precision (валидно)")]
     public void Constructor_WithValidParameters_ShouldNotThrow(
         int precision, int scale, bool onlyPositive)
     {
@@ -62,14 +80,11 @@ public class NumberValidatorTests
         int scale,
         bool onlyPositive,
         bool expectedResult)
-
     {
         var validator = new NumberValidator(precision, scale, onlyPositive);
 
         Assert.That(validator.IsValidNumber(input), Is.EqualTo(expectedResult));
     }
-
-
 
     [TestCase("a.sd", 3, 2, true, false, Description = "Некорректный формат")]
     public void IsValidNumber_LettersInsteadOfNumbers_ShouldRetrunFalse(string input,
@@ -77,10 +92,26 @@ public class NumberValidatorTests
         int scale,
         bool onlyPositive,
         bool expectedResult)
-
     {
         var validator = new NumberValidator(precision, scale, onlyPositive);
 
         Assert.That(validator.IsValidNumber(input), Is.EqualTo(expectedResult));
+    }
+
+    [TestCase("+1.2", 3, 1, true, true, Description = "Ровно на границе precision (3 символа)")]
+    [TestCase("124.3", 3, 1, true, false, Description = "Превышение precision на 1 символ (4 символа)")]
+    [TestCase("1.2", 3, 1, true, true, Description = "Меньше границы precision (без знака, 3 символа)")]
+    public void IsValidNumber_BoundaryPrecision_ShouldReturnExpected(
+    string input, int precision, int scale, bool onlyPositive, bool expectedResult)
+    {
+        var validator = new NumberValidator(precision, scale, onlyPositive);
+        Assert.That(validator.IsValidNumber(input), Is.EqualTo(expectedResult));
+    }
+
+    [Test]
+    [Description("Текущий код выбрасывает исключение, если scale == precision. Это ожидаемое поведение или баг?")]
+    public void Constructor_ScaleEqualsPrecision_ShouldThrowArgumentException()
+    {
+        Assert.Throws<ArgumentException>(() => new NumberValidator(2, 2, true));
     }
 }

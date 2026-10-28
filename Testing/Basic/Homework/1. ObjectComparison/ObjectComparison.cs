@@ -22,7 +22,6 @@ public class ObjectComparison
         ClassicAssert.AreEqual(actualTsar.Age, expectedTsar.Age);
         ClassicAssert.AreEqual(actualTsar.Height, expectedTsar.Height);
         ClassicAssert.AreEqual(actualTsar.Weight, expectedTsar.Weight);
-
         ClassicAssert.AreEqual(expectedTsar.Parent!.Name, actualTsar.Parent!.Name);
         ClassicAssert.AreEqual(expectedTsar.Parent.Age, actualTsar.Parent.Age);
         ClassicAssert.AreEqual(expectedTsar.Parent.Height, actualTsar.Parent.Height);
@@ -38,8 +37,7 @@ public class ObjectComparison
             new Person("Vasili III of Russia", 28, 170, 60, null));
 
         actualTsar.Should().BeEquivalentTo(expectedTsar, options => options
-                  .Excluding((IMemberInfo memberInfo) => memberInfo.Name == "Id"));
-
+                  .Excluding((IMemberInfo memberInfo) => memberInfo.Name == nameof(Person.Id)));
     }
 
     [Test]

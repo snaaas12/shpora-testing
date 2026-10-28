@@ -31,71 +31,70 @@ public class NumberValidatorTests
     }
 
 
-    [TestCase(1, 0, true, Description = "Минимальные валидные параметры")]
-    [TestCase(17, 2, true, Description = "Большие валидные параметры")]
-    [TestCase(5, 4, true, Description = "Scale меньше Precision (валидно)")]
-    public void Constructor_WithValidParameters_ShouldNotThrow(
-        int precision, int scale, bool onlyPositive)
+    [TestCase("+14.23", 5, 2, true, Description = "Положительное число со знаком")]
+    [TestCase("-14.23", 5, 2, false, Description = "Отрицательное число со знаком")]
+    public void isValidNumber_SignOfTheNumber_ShouldReturnTrue(
+    string input,
+    int precision,
+    int scale,
+    bool onlyPositive)
     {
-        Assert.DoesNotThrow(() =>
-            new NumberValidator(precision, scale, onlyPositive));
+        var validator = new NumberValidator(precision, scale, onlyPositive);
+
+        Assert.That(validator.IsValidNumber(input), Is.EqualTo(true));
     }
 
-
-    [TestCase("0.0", 17, 2, true, true, Description = "Простой ноль с дробной частью")]
-    [TestCase("0", 17, 2, true, true, Description = "Простой ноль без дробной части")]
-    [TestCase("+1.23", 4, 2, true, true, Description = "Положительное число со знаком, достаточная длина")]
-    [TestCase("00.00", 3, 2, true, false, Description = "Ведущий ноль в целой части")]
-    [TestCase("-0.00", 3, 2, true, false, Description = "Отрицательный ноль")]
-    [TestCase("+0.00", 3, 2, true, false, Description = "Положительный ноль со знаком")]
-    [TestCase("+1.23", 3, 2, true, false, Description = "Число со знаком, но недостаточная длина целой части")]
-    public void IsValidNumber_ShouldReturnExpectedResult(
+    [TestCase("-0.00", 3, 2, true, Description = "Отрицательный ноль")]
+    [TestCase("+0.00", 3, 2, true, Description = "Положительный ноль со знаком")]
+    [TestCase("00.00", 3, 2, true,  Description = "Ведущий ноль в целой части")]
+    [TestCase("+1.23", 3, 2, true,  Description = "Число со знаком, но недостаточная длина целой части")]
+    public void IsValidNumber_ShouldReturnFalse(
         string input,
         int precision,
         int scale,
-        bool onlyPositive,
-        bool expectedResult)
+        bool onlyPositive)
     {
         var validator = new NumberValidator(precision, scale, onlyPositive);
 
-        Assert.That(validator.IsValidNumber(input), Is.EqualTo(expectedResult));
+        Assert.That(validator.IsValidNumber(input), Is.EqualTo(false));
+    }
+
+    [TestCase("0.0", 17, 2, true, Description = "Простой ноль с дробной частью")]
+    [TestCase("0", 17, 2, true, Description = "Простой ноль без дробной части")]
+    [TestCase("+1.23", 4, 2, true, Description = "Положительное число со знаком, достаточная длина")]
+    public void IsValidNumber_ShouldReturnTrue(string input,
+        int precision,
+        int scale,
+        bool onlyPositive)
+    {
+        var validator = new NumberValidator(precision, scale, onlyPositive);
+
+        Assert.That(validator.IsValidNumber(input), Is.EqualTo(true));
     }
 
 
-    [TestCase("0.000", 17, 2, true, false, Description = "Слишком много знаков после запятой")]
-    public void IsValidNumber_SoMuchScaleSymbols_ShouldReturnFalse(string input,
-        int precision,
-        int scale,
-        bool onlyPositive,
-        bool expectedResult)
+    [Test]
+    public void IsValidNumber_SoMuchScaleSymbols_ShouldReturnFalse()
     {
-        var validator = new NumberValidator(precision, scale, onlyPositive);
+        var validator = new NumberValidator(17, 2, true);
 
-        Assert.That(validator.IsValidNumber(input), Is.EqualTo(expectedResult));
+        Assert.That(validator.IsValidNumber("0.000"), Is.EqualTo(false));
     }
 
-    [TestCase("-1.23", 3, 2, true, false, Description = "Отрицательное число (знак не разрешен)")]
-    public void IsValidNumber_IncorrectNumberSign_ShouldRetrunFalse(string input,
-        int precision,
-        int scale,
-        bool onlyPositive,
-        bool expectedResult)
+    [Test]
+    public void IsValidNumber_IncorrectNumberSign_ShouldRetrunFalse()
     {
-        var validator = new NumberValidator(precision, scale, onlyPositive);
+        var validator = new NumberValidator(3, 2, true);
 
-        Assert.That(validator.IsValidNumber(input), Is.EqualTo(expectedResult));
+        Assert.That(validator.IsValidNumber("-1.23"), Is.EqualTo(false));
     }
 
-    [TestCase("a.sd", 3, 2, true, false, Description = "Некорректный формат")]
-    public void IsValidNumber_LettersInsteadOfNumbers_ShouldRetrunFalse(string input,
-        int precision,
-        int scale,
-        bool onlyPositive,
-        bool expectedResult)
+    [Test]
+    public void IsValidNumber_LettersInsteadOfNumbers_ShouldRetrunFalse()
     {
-        var validator = new NumberValidator(precision, scale, onlyPositive);
+        var validator = new NumberValidator(3, 2, true);
 
-        Assert.That(validator.IsValidNumber(input), Is.EqualTo(expectedResult));
+        Assert.That(validator.IsValidNumber("a.sd"), Is.EqualTo(false));
     }
 
     [TestCase("+1.2", 3, 1, true, true, Description = "Ровно на границе precision (3 символа)")]
@@ -109,7 +108,6 @@ public class NumberValidatorTests
     }
 
     [Test]
-    [Description("Текущий код выбрасывает исключение, если scale == precision. Это ожидаемое поведение или баг?")]
     public void Constructor_ScaleEqualsPrecision_ShouldThrowArgumentException()
     {
         Assert.Throws<ArgumentException>(() => new NumberValidator(2, 2, true));

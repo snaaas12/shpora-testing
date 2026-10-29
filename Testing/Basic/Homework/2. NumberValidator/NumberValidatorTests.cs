@@ -42,14 +42,12 @@ public class NumberValidatorTests
         Assert.That(validator.IsValidNumber(input), Is.EqualTo(true));
     }
 
-    [TestCase("-0.00", false, Description = "Отрицательный ноль")]
-    [TestCase("+0.00", true, Description = "Положительный ноль со знаком")]
-    [TestCase("00.00", true, Description = "Ведущий ноль в целой части")]
-    public void IsValidNumber_IncorrectNotationOfZeros_ShouldReturnFalse(
-        string input,
-        bool onlyPositive)
+    [TestCase("-0.00", Description = "Отрицательный ноль")]
+    [TestCase("+0.00", Description = "Положительный ноль со знаком")]
+    [TestCase("00.00", Description = "Ведущий ноль в целой части")]
+    public void IsValidNumber_IncorrectNotationOfZero_ShouldReturnFalse(string input)
     {
-        var validator = new NumberValidator(3, 2, onlyPositive);
+        var validator = new NumberValidator(3, 2, true);
 
         Assert.That(validator.IsValidNumber(input), Is.EqualTo(false));
     }
